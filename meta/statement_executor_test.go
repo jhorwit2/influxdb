@@ -770,6 +770,7 @@ type StatementExecutorStore struct {
 	SetPrivilegeFn              func(username, database string, p influxql.Privilege) error
 	SetAdminPrivilegeFn         func(username string, admin bool) error
 	UserPrivilegesFn            func(username string) (map[string]influxql.Privilege, error)
+	UserPrivilegeFn             func(username, database string) (influxql.Privilege, error)
 	ContinuousQueriesFn         func() ([]meta.ContinuousQueryInfo, error)
 	CreateContinuousQueryFn     func(database, name, query string) error
 	DropContinuousQueryFn       func(database, name string) error
@@ -841,6 +842,10 @@ func (s *StatementExecutorStore) SetAdminPrivilege(username string, admin bool) 
 
 func (s *StatementExecutorStore) UserPrivileges(username string) (map[string]influxql.Privilege, error) {
 	return s.UserPrivilegesFn(username)
+}
+
+func (s *StatementExecutorStore) UserPrivilege(username, database string) (influxql.Privilege, error) {
+	return s.UserPrivilegeFn(username, database)
 }
 
 func (s *StatementExecutorStore) ContinuousQueries() ([]meta.ContinuousQueryInfo, error) {
