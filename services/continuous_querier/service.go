@@ -61,16 +61,16 @@ type Service struct {
 
 // NewService returns a new instance of Service.
 func NewService(c Config) *Service {
-	logger := log.New(os.Stderr, "[continuous_querier] ", log.LstdFlags)
-	logger.Println("starting continuous query service")
-
 	s := &Service{
 		Config:      &c,
 		RunInterval: time.Second,
 		RunCh:       make(chan struct{}),
-		Logger:      logger,
+		Logger:      log.New(os.Stderr, "[continuous_querier] ", log.LstdFlags),
 		lastRuns:    map[string]time.Time{},
 	}
+
+	s.Logger.Println("starting continuous query service")
+
 	return s
 }
 
@@ -149,7 +149,6 @@ func (s *Service) Run(database, name string) error {
 
 // backgroundLoop runs on a go routine and periodically executes CQs.
 func (s *Service) backgroundLoop() {
-	s.Logger.Print("starting continuous query service")
 	defer s.wg.Done()
 	for {
 		select {
