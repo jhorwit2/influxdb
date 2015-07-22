@@ -110,7 +110,6 @@ func (s *Service) SetLogger(l *log.Logger) {
 
 // Run runs the specified continuous query, or all CQs if none is specified.
 func (s *Service) Run(database, name string) error {
-	s.Logger.Println("running continuous queries on database " + database + " with name " + name)
 	var dbs []meta.DatabaseInfo
 
 	if database != "" {
@@ -150,12 +149,12 @@ func (s *Service) Run(database, name string) error {
 
 // backgroundLoop runs on a go routine and periodically executes CQs.
 func (s *Service) backgroundLoop() {
-	s.Logger.Print("starting continuous query background process")
+	s.Logger.Print("starting continuous query service")
 	defer s.wg.Done()
 	for {
 		select {
 		case <-s.stop:
-			s.Logger.Print("stopping continuous query background process")
+			s.Logger.Print("stopping continuous query service")
 			return
 		case <-s.RunCh:
 			if s.MetaStore.IsLeader() {
@@ -164,7 +163,6 @@ func (s *Service) backgroundLoop() {
 			}
 		case <-time.After(s.RunInterval):
 			if s.MetaStore.IsLeader() {
-				s.Logger.Print("running continuous queries by interval")
 				s.runContinuousQueries()
 			}
 		}
@@ -279,11 +277,12 @@ func (s *Service) runContinuousQueryAndWriteResult(cq *ContinuousQuery) error {
 	}
 
 	// Execute the SELECT.
-	s.Logger.Printf("running cq %s on db %s", cq.Info.Name, cq.intoDB())
 	ch, err := s.QueryExecutor.ExecuteQuery(q, cq.Database, NoChunkingSize)
 	if err != nil {
 		return err
 	}
+
+	s.Logger.Printf("executing continuous query %s", cq.Info.Name)
 
 	// Read all rows from the result channel.
 	for result := range ch {
